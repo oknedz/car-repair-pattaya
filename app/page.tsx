@@ -118,11 +118,11 @@ export default function Home() {
   const [currentHeroImage, setCurrentHeroImage] = useState(0);
   const heroImages = ['/hero-image.jpg', '/kate-ibragimova-bEGTsOCnHro-unsplash.jpg'];
   
-  const heroRef = useRef(null);
-  const badgesRef = useRef(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const badgesRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
-  const contactBarRef = useRef(null);
-  const reviewsRef = useRef(null);
+  const contactBarRef = useRef<HTMLDivElement>(null);
+  const reviewsRef = useRef<HTMLDivElement>(null);
 
   // Typewriter effect for Pattaya
   useEffect(() => {
