@@ -586,7 +586,7 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-center mb-12 text-[#1E293B] text-slate-800">{t[language].whyChooseTitle}</h2>
         <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Special Promo Card */}
-          <div className="value-card group p-8 rounded-xl bg-gradient-to-br from-[#C5A059] to-[#B8935A] hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-2 border-[#C5A059]/30 shadow-lg relative overflow-hidden">
+          <div className="value-card group p-8 pt-12 md:pt-8 rounded-xl bg-gradient-to-br from-[#C5A059] to-[#B8935A] hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-2 border-[#C5A059]/30 shadow-lg relative overflow-hidden">
             {/* NEW Badge */}
             <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full shadow-lg">
               <span className="text-xs font-bold text-[#C5A059]">{language === 'th' ? 'ใหม่' : 'NEW'}</span>
