@@ -1,0 +1,800 @@
+"use client";
+
+import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+function MiniCalendar({ selectedDate, onSelectDate }: { selectedDate: Date | null; onSelectDate: (date: Date) => void }) {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    return { daysInMonth, startingDayOfWeek };
+  };
+
+  const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const prevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+
+  const isSelected = (day: number) => {
+    if (!selectedDate) return false;
+    return selectedDate.getDate() === day && 
+           selectedDate.getMonth() === currentMonth.getMonth() && 
+           selectedDate.getFullYear() === currentMonth.getFullYear();
+  };
+
+  const isToday = (day: number) => {
+    const today = new Date();
+    return today.getDate() === day && 
+           today.getMonth() === currentMonth.getMonth() && 
+           today.getFullYear() === currentMonth.getFullYear();
+  };
+
+  return (
+    <div className="border border-slate-300 dark:border-slate-200 rounded-lg p-3 bg-white dark:bg-slate-50 text-[85%]">
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={prevMonth} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-900 dark:text-white">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <div className="font-semibold">
+          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+        </div>
+        <button onClick={nextMonth} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-900 dark:text-white">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {dayNames.map(day => (
+          <div key={day} className="text-center text-xs font-medium text-slate-500 dark:text-slate-400 py-0.5">
+            {day}
+          </div>
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: startingDayOfWeek }).map((_, i) => (
+          <div key={`empty-${i}`} />
+        ))}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1;
+          const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+          const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+          
+          return (
+            <button
+              key={day}
+              onClick={() => !isPast && onSelectDate(date)}
+              disabled={isPast}
+              className={`aspect-square p-1 text-sm rounded-lg transition-all ${
+                isSelected(day) 
+                  ? 'bg-[#C5A059] text-white font-bold' 
+                  : isToday(day)
+                  ? 'bg-[#C5A059] text-white font-semibold'
+                  : isPast
+                  ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white'
+              }`}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function Home() {
+  const [showMap, setShowMap] = useState(false);
+  const [showBooking, setShowBooking] = useState(false);
+  const [bookingStep, setBookingStep] = useState(1);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [language, setLanguage] = useState<'en' | 'th'>('en');
+  
+  const heroRef = useRef(null);
+  const badgesRef = useRef(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const contactBarRef = useRef(null);
+  const reviewsRef = useRef(null);
+
+  useEffect(() => {
+    // Hero Parallax
+    if (heroRef.current) {
+      gsap.to(heroRef.current, {
+        yPercent: 30,
+        ease: "none",
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true
+        }
+      });
+    }
+
+    // Trust Badges - Stagger from left with bounce
+    if (badgesRef.current) {
+      const badges = badgesRef.current.children;
+      gsap.fromTo(badges,
+        { x: -100, opacity: 0, scale: 0.8 },
+        {
+          x: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          stagger: 0.2,
+          ease: "back.out(1.7)",
+          scrollTrigger: {
+            trigger: badgesRef.current,
+            start: "top 80%",
+            once: true
+          }
+        }
+      );
+    }
+
+    // Contact Bar - Slide up
+    if (contactBarRef.current) {
+      gsap.from(contactBarRef.current, {
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: contactBarRef.current,
+          start: "top 90%",
+          once: true
+        }
+      });
+    }
+
+    // Why Choose Us Cards - Stagger reveal
+    if (cardsRef.current) {
+      const cards = cardsRef.current.querySelectorAll('.value-card');
+      gsap.fromTo(cards,
+        { y: 60, opacity: 0, scale: 0.9 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: cardsRef.current,
+            start: "top 75%",
+            once: true
+          }
+        }
+      );
+    }
+
+    // Reviews - Fade in
+    if (reviewsRef.current) {
+      const reviewCards = reviewsRef.current.querySelectorAll('.review-card');
+      gsap.fromTo(reviewCards,
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          stagger: 0.2,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: reviewsRef.current,
+            start: "top 80%",
+            once: true
+          }
+        }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    ScrollTrigger.refresh();
+  }, [language]);
+
+  const t = {
+    en: {
+      logo: "AutoFix",
+      heroTitle: "Expert Car Service You Can Trust",
+      heroDesc: "Professional service • Honest pricing",
+      badge1: "DLT Certified",
+      badge2: "10+ Years Experience",
+      badge3: "Genuine Parts",
+      ctaButton: "Book Service Now",
+      whyChooseTitle: "Why Choose Us",
+      promoTitle: "Special Offer!",
+      promoText: "Free 25-point check for new customers",
+      reviewsTitle: "Customer Reviews",
+      footerHours: "Business Hours",
+      footerPayment: "Payment Methods",
+      footerContact: "Contact Us",
+      tel: "Tel",
+      facebook: "Facebook Page",
+      footerCopyright: "© 2026 AutoFix. Professional Car Repair Service",
+      bookingTitle: "Book Appointment",
+      step1Name: "Your Name",
+      step1Phone: "Phone Number",
+      step1Email: "Email",
+      step2Service: "Select Service",
+      step2Vehicle: "Vehicle Make & Model",
+      step3Date: "Preferred Date",
+      step3Time: "Preferred Time",
+      step3Notes: "Additional Notes (Optional)",
+      notesPlaceholder: "Any specific concerns or requests...",
+      next: "Next",
+      back: "Back",
+      submit: "Submit",
+      mapTitle: "Our Location",
+      mon: "Mon-Fri",
+      sat: "Sat",
+      sun: "Sun",
+      closed: "Closed"
+    },
+    th: {
+      logo: "ออโต้ฟิกซ์",
+      heroTitle: "ซ่อมรถยนต์มืออาชีพ ไว้ใจได้",
+      heroDesc: "บริการมืออาชีพ • ราคายุติธรรม",
+      badge1: "รับรองโดย คมธ.",
+      badge2: "ประสบการณ์ 10+ ปี",
+      badge3: "อะไหล่แท้",
+      ctaButton: "จองบริการเลย",
+      whyChooseTitle: "ทำไมต้องเลือกเรา",
+      promoTitle: "โปรโมชั่นพิเศษ!",
+      promoText: "ฟรี! ตรวจเช็ค 25 จุด สำหรับลูกค้าใหม่",
+      reviewsTitle: "รีวิวจากลูกค้า",
+      footerHours: "เวลาทำการ",
+      footerPayment: "ช่องทางชำระเงิน",
+      footerContact: "ติดต่อเรา",
+      tel: "โทร",
+      facebook: "เพจเฟซบุ๊ก",
+      footerCopyright: "© 2026 ออโต้ฟิกซ์ ศูนย์บริการซ่อมรถยนต์มืออาชีพ",
+      bookingTitle: "จองคิวซ่อม",
+      step1Name: "ชื่อ-นามสกุล",
+      step1Phone: "เบอร์โทรศัพท์",
+      step1Email: "อีเมล",
+      step2Service: "เลือกบริการ",
+      step2Vehicle: "ยี่ห้อและรุ่นรถ",
+      step3Date: "วันที่ต้องการ",
+      step3Time: "เวลาที่ต้องการ",
+      step3Notes: "หมายเหตุ (ถ้ามี)",
+      notesPlaceholder: "ระบุปัญหาหรือความต้องการเพิ่มเติม...",
+      next: "ถัดไป",
+      back: "ย้อนกลับ",
+      submit: "ยืนยันการจอง",
+      mapTitle: "ที่อยู่ของเรา",
+      mon: "จันทร์-ศุกร์",
+      sat: "เสาร์",
+      sun: "อาทิตย์",
+      closed: "ปิด"
+    }
+  };
+  const valueCards = [
+    { 
+      title: "Professional Team", 
+      titleTh: "ทีมงานมืออาชีพ", 
+      desc: "Certified mechanics with 10+ years experience",
+      descTh: "ช่างผู้เชี่ยวชาญรับรอง 10+ ปี",
+      icon: "🔧",
+      color: "from-blue-500 to-blue-600",
+      accentColor: "#3B82F6"
+    },
+    { 
+      title: "Fast Service", 
+      titleTh: "บริการรวดเร็ว", 
+      desc: "Same-day service for most repairs",
+      descTh: "ซ่อมเสร็จภายในวันเดียว",
+      icon: "⏱️",
+      color: "from-emerald-500 to-emerald-600",
+      accentColor: "#10B981"
+    },
+    { 
+      title: "Fair Pricing", 
+      titleTh: "ราคายุติธรรม", 
+      desc: "Transparent pricing, no hidden fees",
+      descTh: "ราคาชัดเจน ไม่มีค่าแอบแฝง",
+      icon: "฿",
+      color: "from-amber-500 to-amber-600",
+      accentColor: "#F59E0B"
+    }
+  ];
+
+  const reviews = [
+    { name: "John D.", text: "Fast service, great prices!", rating: 5 },
+    { name: "Sarah M.", text: "Professional and trustworthy team", rating: 5 },
+    { name: "Mike R.", text: "Best repair shop in town", rating: 5 }
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0f172a] transition-colors pb-20 md:pb-0">
+      {/* Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#1E293B]/70 border-b border-slate-700/30 shadow-lg">
+        <nav className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center">
+            <Image 
+              src="/logo.svg" 
+              alt={t[language].logo} 
+              width={150} 
+              height={45}
+              className="h-10 w-auto"
+              priority
+            />
+          </div>
+          <div className="flex gap-3 items-center">
+            <button 
+              onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}
+              className="px-2 py-1 flex items-center gap-1.5 opacity-70 hover:opacity-100"
+              title={language === 'en' ? 'Switch to Thai' : 'Switch to English'}
+            >
+              {language === 'en' ? (
+                // Thai Flag
+                <>
+                  <div className="w-6 h-4 rounded-sm overflow-hidden shadow-sm border border-slate-500">
+                    <div className="h-[33.33%] bg-[#A51931]"></div>
+                    <div className="h-[33.33%] bg-white"></div>
+                    <div className="h-[33.33%] bg-[#2D2A4A]"></div>
+                  </div>
+                  <span className="text-white text-xs">TH</span>
+                </>
+              ) : (
+                // English Flag (UK)
+                <>
+                  <div className="w-6 h-4 rounded-sm overflow-hidden shadow-sm border border-slate-500 relative bg-[#012169]">
+                    <div className="absolute inset-0">
+                      <svg viewBox="0 0 60 30" className="w-full h-full">
+                        <clipPath id="s"><path d="M0,0 v30 h60 v-30 z"/></clipPath>
+                        <clipPath id="t"><path d="M30,15 h30 v15 z v-30 h-30 z h-30 v15 z v-30 h30 z"/></clipPath>
+                        <g clipPath="url(#s)">
+                          <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+                          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
+                          <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4"/>
+                          <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/>
+                          <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="text-white text-xs">EN</span>
+                </>
+              )}
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* Hero */}
+      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <div ref={heroRef} className="absolute inset-0 z-0">
+          <Image 
+            src="/hero-image.jpg" 
+            alt="Car repair service" 
+            fill
+            className="object-cover object-center"
+            priority
+            quality={90}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50"></div>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-20 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in text-white drop-shadow-2xl">
+            <span className="block text-5xl md:text-7xl font-extrabold">{language === 'en' ? 'Expert Car Service' : 'ซ่อมรถยนต์มืออาชีพ'}</span>
+            <span className="block text-3xl md:text-5xl font-semibold mt-2">{language === 'en' ? 'You Can Trust' : 'ไว้ใจได้'}</span>
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-8 drop-shadow-lg">
+            {t[language].heroDesc}
+          </p>
+          
+          {/* Trust Badges */}
+          <div ref={badgesRef} className="flex flex-wrap justify-center items-center gap-4 mb-8 text-sm">
+            <div className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold shadow-lg border border-white/20">✓ {t[language].badge1}</div>
+            <div className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold shadow-lg border border-white/20">✓ {t[language].badge2}</div>
+            <div className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold shadow-lg border border-white/20">✓ {t[language].badge3}</div>
+          </div>
+
+          <button onClick={() => { setShowBooking(true); setBookingStep(1); }} className="px-8 py-4 text-lg font-semibold rounded-full bg-[#C5A059] text-white hover:bg-[#B8935A] hover:scale-105 hover:shadow-2xl transition-all">
+            {t[language].ctaButton}
+          </button>
+        </div>
+      </section>
+
+      {/* Quick Contact Bar - Hidden on mobile (sticky bar replaces it) */}
+      <section ref={contactBarRef} className="hidden md:block bg-white dark:bg-white border-y border-slate-200 dark:border-slate-700">
+        <div className="max-w-7xl mx-auto grid grid-cols-3 divide-x divide-slate-200 dark:divide-slate-700">
+          {/* Phone Section */}
+          <a 
+            href="tel:+66123456789" 
+            className="flex flex-col items-center justify-center py-6 px-4 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all group cursor-pointer"
+          >
+            <div className="mb-3 p-3 rounded-full bg-[#C5A059] group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{language === 'th' ? 'โทรหาเรา' : 'Call Us'}</div>
+            <div className="text-sm font-bold text-[#1E293B] dark:text-white">012-345-6789</div>
+          </a>
+
+          {/* Maps Section */}
+          <button 
+            onClick={() => setShowMap(true)}
+            className="flex flex-col items-center justify-center py-6 px-4 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all group cursor-pointer"
+          >
+            <div className="mb-3 p-3 rounded-full bg-[#C5A059] group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{language === 'th' ? 'ดูแผนที่' : 'View Location'}</div>
+            <div className="text-sm font-bold text-[#1E293B] dark:text-white">{language === 'th' ? 'แผนที่' : 'Maps'}</div>
+          </button>
+
+          {/* LINE Section */}
+          <a 
+            href="https://line.me" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex flex-col items-center justify-center py-6 px-4 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all group cursor-pointer"
+          >
+            <div className="mb-3 p-3 rounded-full bg-[#06C755] group-hover:scale-110 transition-transform">
+              <Image src="/line.svg" alt="LINE" width={28} height={28} className="rounded-full" />
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{language === 'th' ? 'แชทกับเรา' : 'Chat with Us'}</div>
+            <div className="text-sm font-bold text-[#1E293B] dark:text-white">LINE</div>
+          </a>
+        </div>
+      </section>
+
+      {/* Why Choose Us Section */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <h2 className="text-3xl font-bold text-center mb-12 text-[#1E293B] dark:text-white">{t[language].whyChooseTitle}</h2>
+        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Special Promo Card */}
+          <div className="value-card group p-8 rounded-xl bg-gradient-to-br from-slate-50 to-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-2 border-slate-200/50 shadow-lg relative overflow-hidden animate-pulse-glow">
+            {/* NEW Badge */}
+            <div className="absolute top-4 right-4 bg-[#C5A059] px-3 py-1 rounded-full shadow-lg">
+              <span className="text-xs font-bold text-white">{language === 'th' ? 'ใหม่' : 'NEW'}</span>
+            </div>
+            
+            <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative z-10">
+              <h3 className="font-bold mb-3 text-white text-2xl">{t[language].promoTitle}</h3>
+              <p className="text-base font-semibold text-white/95 leading-relaxed">{t[language].promoText}</p>
+            </div>
+          </div>
+          
+          {valueCards.map((card, i) => (
+            <div 
+              key={i} 
+              className="value-card group p-8 rounded-xl bg-white dark:bg-white border border-slate-200 dark:border-slate-700 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 shadow-sm relative overflow-hidden"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
+              <div className="relative z-10">
+                <h3 className="font-bold mb-3 text-[#1E293B] dark:text-white text-2xl">
+                  {language === 'th' ? card.titleTh : card.title}
+                </h3>
+                <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {language === 'th' ? card.descTh : card.desc}
+                </p>
+              </div>
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C5A059] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section ref={reviewsRef} className="max-w-7xl mx-auto px-4 py-16">
+        <h2 className="text-3xl font-bold text-center mb-12 text-[#1E293B] dark:text-white">{t[language].reviewsTitle}</h2>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6">
+            {reviews.map((r, i) => (
+              <div key={i} className="review-card p-6 rounded-xl bg-white dark:bg-white border border-slate-200 dark:border-slate-700 hover:scale-105 hover:shadow-xl transition-all shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="text-[#FBBF24] text-xl">★★★★★</div>
+                  <span className="text-sm text-slate-500 dark:text-slate-400">Google Reviews</span>
+                </div>
+                <p className="mb-4 text-slate-700 dark:text-slate-300 italic">"{r.text}"</p>
+                <p className="font-semibold text-[#1E293B] dark:text-white">{r.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-white dark:bg-slate-50 border-t border-slate-200 dark:border-slate-700 mt-20">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          {/* Main Footer Content */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
+            {/* Company Info */}
+            <div>
+              <div className="mb-4">
+                <Image 
+                  src="/logo.svg" 
+                  alt={t[language].logo} 
+                  width={120} 
+                  height={36}
+                  className="h-8 w-auto mb-4"
+                />
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                {language === 'th' 
+                  ? 'ศูนย์บริการซ่อมรถยนต์มืออาชีพ ไว้ใจได้ ราคายุติธรรม' 
+                  : 'Professional car service you can trust with honest pricing'}
+              </p>
+            </div>
+
+            {/* Contact Info */}
+            <div>
+              <h3 className="font-bold text-[#1E293B] dark:text-white mb-4 text-sm uppercase tracking-wide">{t[language].footerContact}</h3>
+              <div className="space-y-3">
+                <a href="tel:+66123456789" className="flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:text-[#3B82F6] transition-colors group">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white flex items-center justify-center group-hover:bg-[#C5A059] group-hover:text-white transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm">012-345-6789</span>
+                </a>
+                <a href="mailto:info@autofix.com" className="flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:text-[#3B82F6] transition-colors group">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white flex items-center justify-center group-hover:bg-[#C5A059] group-hover:text-white transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm">info@autofix.com</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Hours & Payment */}
+            <div>
+              <h3 className="font-bold text-[#1E293B] dark:text-white mb-4 text-sm uppercase tracking-wide">{t[language].footerHours}</h3>
+              <div className="space-y-2 mb-6">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">{t[language].mon}</span>
+                  <span className="text-[#1E293B] dark:text-white font-semibold">08:00-18:00</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">{t[language].sat}</span>
+                  <span className="text-[#1E293B] dark:text-white font-semibold">08:00-17:00</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600 dark:text-slate-400">{t[language].sun}</span>
+                  <span className="text-red-500 font-semibold">{t[language].closed}</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-500 mb-2 uppercase tracking-wide">{t[language].footerPayment}</p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-slate-100 dark:bg-white text-slate-700 dark:text-slate-300 rounded text-xs">PromptPay</span>
+                  <span className="px-2 py-1 bg-slate-100 dark:bg-white text-slate-700 dark:text-slate-300 rounded text-xs">Cash</span>
+                  <span className="px-2 py-1 bg-slate-100 dark:bg-white text-slate-700 dark:text-slate-300 rounded text-xs">Cards</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-slate-500 dark:text-slate-400 text-sm text-center md:text-left">
+              {t[language].footerCopyright}
+            </p>
+            <div className="flex gap-4">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white hover:bg-[#1877F2] hover:text-white flex items-center justify-center transition-all">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+              </a>
+              <a href="https://line.me" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white hover:bg-[#06C755] hover:text-white flex items-center justify-center transition-all">
+                <Image src="/line.svg" alt="LINE" width={20} height={20} className="rounded-full" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Sticky Mobile Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white dark:bg-slate-50 border-t border-slate-200 dark:border-slate-700 shadow-2xl">
+        <div className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-slate-700">
+          <a 
+            href="tel:+66123456789" 
+            className="flex flex-col items-center justify-center py-3 px-2 active:bg-slate-100 dark:active:bg-slate-800 transition-colors"
+          >
+            <svg className="w-6 h-6 text-[#3B82F6] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            <span className="text-xs font-semibold text-[#1E293B] dark:text-white">{language === 'th' ? 'โทร' : 'Call'}</span>
+          </a>
+          
+          <button 
+            onClick={() => setShowMap(true)}
+            className="flex flex-col items-center justify-center py-3 px-2 active:bg-slate-100 dark:active:bg-slate-800 transition-colors"
+          >
+            <svg className="w-6 h-6 text-[#10B981] mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-xs font-semibold text-[#1E293B] dark:text-white">{language === 'th' ? 'แผนที่' : 'Maps'}</span>
+          </button>
+          
+          <a 
+            href="https://line.me" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex flex-col items-center justify-center py-3 px-2 active:bg-slate-100 dark:active:bg-slate-800 transition-colors"
+          >
+            <div className="w-6 h-6 mb-1 flex items-center justify-center">
+              <Image src="/line.svg" alt="LINE" width={24} height={24} className="rounded-full" />
+            </div>
+            <span className="text-xs font-semibold text-[#1E293B] dark:text-white">LINE</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Booking Modal */}
+      {showBooking && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShowBooking(false)}>
+          <div className="bg-white dark:bg-white rounded-2xl max-w-md w-full shadow-2xl my-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-[#1E293B] dark:text-white">{t[language].bookingTitle}</h3>
+              <button onClick={() => setShowBooking(false)} className="text-2xl hover:bg-slate-100 dark:hover:bg-slate-700 w-8 h-8 rounded-lg transition-colors text-slate-900 dark:text-white">×</button>
+            </div>
+            
+            {/* Progress Steps */}
+            <div className="flex items-center justify-center gap-2 p-6 pb-4">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold transition-all ${bookingStep >= step ? 'bg-[#C5A059] text-white' : 'bg-slate-200 dark:bg-slate-100 text-slate-500'}`}>
+                    {step}
+                  </div>
+                  {step < 3 && <div className={`w-12 h-1 ${bookingStep > step ? 'bg-[#C5A059]' : 'bg-slate-200 dark:bg-slate-100'}`} />}
+                </div>
+              ))}
+            </div>
+
+            <div className="p-6 pt-2">
+              {/* Step 1: Contact Info */}
+              {bookingStep === 1 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t[language].step1Name}</label>
+                    <input type="text" className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-200 bg-white dark:bg-slate-50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]" placeholder={language === 'th' ? 'สมชาย ใจดี' : 'John Doe'} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t[language].step1Phone}</label>
+                    <input type="tel" className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-200 bg-white dark:bg-slate-50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]" placeholder="+66 12-345-6789" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t[language].step1Email}</label>
+                    <input type="email" className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-200 bg-white dark:bg-slate-50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]" placeholder="john@example.com" />
+                  </div>
+                  <button onClick={() => setBookingStep(2)} className="w-full px-6 py-3 rounded-lg bg-[#C5A059] text-white font-semibold hover:bg-[#B8935A] hover:scale-105 transition-all">
+                    {t[language].next}
+                  </button>
+                </div>
+              )}
+
+              {/* Step 2: Service Selection */}
+              {bookingStep === 2 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t[language].step2Service}</label>
+                    <select className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-[#FBBF24] bg-white dark:bg-white text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-[#FBBF24]">
+                      <option>Oil Change</option>
+                      <option>Brake Service</option>
+                      <option>Engine Diagnostics</option>
+                      <option>Tire Service</option>
+                      <option>Battery Check</option>
+                      <option>AC Repair</option>
+                      <option>Transmission</option>
+                      <option>Full Inspection</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t[language].step2Vehicle}</label>
+                    <input type="text" className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-200 bg-white dark:bg-slate-50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]" placeholder={language === 'th' ? 'เช่น โตโยต้า คัมรี่ 2020' : 'e.g., Toyota Camry 2020'} />
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setBookingStep(1)} className="flex-1 px-6 py-3 rounded-lg border border-slate-300 dark:border-slate-200 font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-slate-900 dark:text-white">
+                      {t[language].back}
+                    </button>
+                    <button onClick={() => setBookingStep(3)} className="flex-1 px-6 py-3 rounded-lg bg-[#C5A059] text-white font-semibold hover:bg-[#B8935A] hover:scale-105 transition-all">
+                      {t[language].next}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Date & Time */}
+              {bookingStep === 3 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t[language].step3Date}</label>
+                    <MiniCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t[language].step3Time}</label>
+                    <select className="w-full px-4 py-2 rounded-lg border border-zinc-300 dark:border-[#FBBF24] bg-white dark:bg-white text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-[#FBBF24]">
+                      <option>9:00 AM</option>
+                      <option>10:00 AM</option>
+                      <option>11:00 AM</option>
+                      <option>12:00 PM</option>
+                      <option>1:00 PM</option>
+                      <option>2:00 PM</option>
+                      <option>3:00 PM</option>
+                      <option>4:00 PM</option>
+                      <option>5:00 PM</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t[language].step3Notes}</label>
+                    <textarea className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-200 bg-white dark:bg-slate-50 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]" rows={3} placeholder={t[language].notesPlaceholder}></textarea>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setBookingStep(2)} className="flex-1 px-6 py-3 rounded-lg border border-slate-300 dark:border-slate-200 font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-slate-900 dark:text-white">
+                      {t[language].back}
+                    </button>
+                    <button onClick={() => { setShowBooking(false); alert(language === 'th' ? 'จองสำเร็จ! เราจะติดต่อกลับเร็วๆ นี้' : 'Booking submitted! We will contact you shortly.'); }} className="flex-1 px-6 py-3 rounded-lg bg-[#C5A059] text-white font-semibold hover:bg-[#059669] hover:scale-105 transition-all">
+                      {t[language].submit}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Map Modal */}
+      {showMap && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowMap(false)}>
+          <div className="bg-white dark:bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-[#1E293B] dark:text-white">{t[language].mapTitle}</h3>
+              <button onClick={() => setShowMap(false)} className="text-2xl hover:bg-slate-100 dark:hover:bg-slate-700 w-8 h-8 rounded-lg transition-colors text-slate-900 dark:text-white">×</button>
+            </div>
+            <div className="w-full h-[500px]">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.6449276897165!2d100.5237!3d13.7367!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTPCsDQ0JzEyLjEiTiAxMDDCsDMxJzI1LjMiRQ!5e0!3m2!1sen!2sth!4v1234567890"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
