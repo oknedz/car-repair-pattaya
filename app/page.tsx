@@ -588,7 +588,7 @@ export default function Home() {
           {/* Special Promo Card */}
           <div className="value-card group p-8 rounded-xl bg-gradient-to-br from-[#C5A059] to-[#B8935A] hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-2 border-[#C5A059]/30 shadow-lg relative overflow-hidden">
             {/* NEW Badge - Ribbon Style */}
-            <div className="absolute -top-1 -right-1 bg-white px-6 py-1.5 shadow-lg transform rotate-12 origin-top-right">
+            <div className="absolute top-2 -right-1 bg-white px-6 py-1.5 shadow-lg transform rotate-12 origin-top-right">
               <span className="text-xs font-bold text-[#C5A059]">{language === 'th' ? 'ใหม่' : 'NEW'}</span>
             </div>
             
