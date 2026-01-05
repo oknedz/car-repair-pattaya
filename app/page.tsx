@@ -546,8 +546,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
             </div>
-            <div className="text-xs text-slate-500 mb-1">{language === 'th' ? 'โทรหาเรา' : 'Call Us'}</div>
-            <div className="text-sm font-bold text-[#1E293B] text-slate-800">012-345-6789</div>
+            <div className="text-base font-bold text-slate-800">{language === 'th' ? 'โทรหาเรา' : 'Call Us'}</div>
           </a>
 
           {/* Maps Section */}
@@ -561,8 +560,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <div className="text-xs text-slate-500 mb-1">{language === 'th' ? 'ดูแผนที่' : 'View Location'}</div>
-            <div className="text-sm font-bold text-[#1E293B] text-slate-800">{language === 'th' ? 'ร้านพัทยา' : 'Our Pattaya Shop'}</div>
+            <div className="text-base font-bold text-slate-800">{language === 'th' ? 'ร้านพัทยา' : 'Our Pattaya Shop'}</div>
           </button>
 
           {/* LINE Section */}
